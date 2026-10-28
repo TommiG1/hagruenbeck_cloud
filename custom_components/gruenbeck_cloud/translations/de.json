@@ -385,7 +385,7 @@
         "name": "Restkapazität Austauscher 2 %"
       },
       "salt_range": {
-        "name": "Salzvorrat"
+        "name": "Salzreichweite"
       },
       "salt_consumption": {
         "name": "Salzverbrauch"
