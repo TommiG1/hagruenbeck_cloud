@@ -13,7 +13,7 @@ from pygruenbeck_cloud.exceptions import (
     PyGruenbeckCloudResponseStatusError,
     PyGruenbeckCloudUpdateParameterError,
 )
-from pygruenbeck_cloud.models import Device
+from pygruenbeck_cloud.models import Device, DeviceError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
@@ -31,11 +31,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     CONF_DEVICE_ID,
     DOMAIN,
+    EVENT_DEVICE_ALERT,
     SERVICE_PARAM_PARAMETER,
     SERVICE_PARAM_VALUE,
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_RETRY,
 )
+from .helpers import alert_key, unresolved_errors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +58,9 @@ class GruenbeckCloudCoordinator(DataUpdateCoordinator[Device]):
         self._device_id = config_entry.data[CONF_DEVICE_ID]
 
         self.unsub: CALLBACK_TYPE | None = None
+        self._known_alert_keys: set[tuple[int, str, str]] = set()
+        self._pending_alerts: list[DeviceError] = []
+        self._alerts_initialized = False
         self._listen_task_running = False
         self._ws_generation = 0
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
@@ -98,6 +103,45 @@ class GruenbeckCloudCoordinator(DataUpdateCoordinator[Device]):
             self.api = self._create_api()
             if old_device is not None:
                 self.api.device = old_device
+
+    @callback
+    def consume_pending_alerts(self) -> list[DeviceError]:
+        """Return and clear alerts that should be emitted as events."""
+        alerts = self._pending_alerts
+        self._pending_alerts = []
+        return alerts
+
+    def _process_device_alerts(self, device: Device) -> None:
+        """Detect new unresolved alerts and notify Home Assistant."""
+        unresolved = unresolved_errors(device)
+        current_keys = {alert_key(error) for error in unresolved}
+
+        # Seed on first update so reloads don't re-fire existing alerts.
+        if not self._alerts_initialized:
+            self._known_alert_keys = current_keys
+            self._alerts_initialized = True
+            return
+
+        new_errors = [
+            error
+            for error in unresolved
+            if alert_key(error) not in self._known_alert_keys
+        ]
+
+        for error in new_errors:
+            event_data = {
+                "device_id": device.id,
+                "serial_number": device.serial_number,
+                "error_code": error.error_code,
+                "type": error.type,
+                "message": error.message,
+                "description": error.description,
+                "date": error.date.isoformat(),
+            }
+            self.hass.bus.async_fire(EVENT_DEVICE_ALERT, event_data)
+            self._pending_alerts.append(error)
+
+        self._known_alert_keys = current_keys
 
     @callback
     def _listen_websocket(self) -> None:
@@ -214,6 +258,7 @@ class GruenbeckCloudCoordinator(DataUpdateCoordinator[Device]):
         self.data = data
         self.last_update_success = True
         self.update_interval = UPDATE_INTERVAL
+        self._process_device_alerts(data)
 
         self.logger.debug(
             "Manually updated %s data",
@@ -251,6 +296,7 @@ class GruenbeckCloudCoordinator(DataUpdateCoordinator[Device]):
                     )
                     await self._reset_websocket()
 
+            self._process_device_alerts(device)
             self.update_interval = UPDATE_INTERVAL
             return device
         except PyGruenbeckCloudMissingAuthTokenError as err:
