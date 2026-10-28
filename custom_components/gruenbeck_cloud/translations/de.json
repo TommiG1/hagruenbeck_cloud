@@ -413,6 +413,18 @@
       },
       "remaining_amount_of_water": {
         "name": "Adsorber Restwassermenge"
+      },
+      "soft_water_quantity_today": {
+        "name": "Weichwasserverbrauch heute"
+      },
+      "soft_water_quantity_yesterday": {
+        "name": "Weichwasserverbrauch gestern"
+      },
+      "salt_consumption_today": {
+        "name": "Salzverbrauch heute"
+      },
+      "salt_consumption_yesterday": {
+        "name": "Salzverbrauch gestern"
       }
     },
     "event": {

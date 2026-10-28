@@ -279,6 +279,14 @@ class GruenbeckCloudCoordinator(DataUpdateCoordinator[Device]):
             await self.api.get_device_infos()
             device = await self.api.get_device_infos_parameters()
 
+            try:
+                await self.api.get_device_water_measurements()
+                await self.api.get_device_salt_measurements()
+                if self.api.device is not None:
+                    device = self.api.device
+            except PyGruenbeckCloudError as err:
+                self.logger.debug("Daily measurements unavailable: %s", err)
+
             # Start listening to websocket at first time / after reset
             if not self.api.connected and not self.unsub:
                 self._listen_websocket()

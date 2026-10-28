@@ -277,6 +277,18 @@
       },
       "step_indication_regeneration_valve_2": {
         "name": "Step indication regeneration valve 2"
+      },
+      "soft_water_quantity_today": {
+        "name": "Soft Water Quantity Today"
+      },
+      "soft_water_quantity_yesterday": {
+        "name": "Soft Water Quantity Yesterday"
+      },
+      "salt_consumption_today": {
+        "name": "Salt Consumption Today"
+      },
+      "salt_consumption_yesterday": {
+        "name": "Salt Consumption Yesterday"
       }
     },
     "switch": {
