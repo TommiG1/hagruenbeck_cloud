@@ -1,15 +1,25 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Gerät ist bereits konfiguriert"
+      "already_configured": "Gerät ist bereits konfiguriert",
+      "reauth_successful": "Erneute Authentifizierung war erfolgreich"
     },
     "error": {
       "cannot_connect": "Verbindung fehlgeschlagen",
       "cannot_connect_timeout": "Timeout beim Verbindungsversuch",
+      "invalid_auth": "Ungültige Anmeldedaten",
       "unknown": "Unerwarteter Fehler",
       "no_devices": "Keine Geräte im Account gefunden"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "Passwort",
+          "username": "Benutzername"
+        },
+        "description": "Die Grünbeck-Cloud-Zugangsdaten sind nicht mehr gültig. Bitte erneut eingeben.",
+        "title": "Grünbeck Cloud erneut authentifizieren"
+      },
       "user": {
         "data": {
           "password": "Passwort",
@@ -87,6 +97,24 @@
     "binary_sensor": {
       "has_error": {
         "name": "Fehler"
+      },
+      "has_warning": {
+        "name": "Warnung"
+      },
+      "salt_supply_low": {
+        "name": "Salzvorrat gering"
+      }
+    },
+    "event": {
+      "device_alert": {
+        "name": "Gerätealarm",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "device_alert": "Gerätealarm"
+            }
+          }
+        }
       }
     },
     "text": {
@@ -320,8 +348,20 @@
       "soft_water_quantity": {
         "name": "Weichwasserverbrauch"
       },
+      "soft_water_quantity_today": {
+        "name": "Weichwasserverbrauch heute"
+      },
+      "soft_water_quantity_yesterday": {
+        "name": "Weichwasserverbrauch gestern"
+      },
       "soft_water_quantity_2": {
         "name": "Weichwasserverbrauch Austauscher 2"
+      },
+      "salt_consumption_today": {
+        "name": "Salzverbrauch heute"
+      },
+      "salt_consumption_yesterday": {
+        "name": "Salzverbrauch gestern"
       },
       "regeneration_counter": {
         "name": "Anzahl Regenerationen"

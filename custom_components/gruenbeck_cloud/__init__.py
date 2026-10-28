@@ -17,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
+    Platform.EVENT,
     Platform.SELECT,
     Platform.TEXT,
     Platform.NUMBER,
@@ -31,6 +32,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, config_entry=entry
     )
     await coordinator.async_config_entry_first_refresh()
+
+    # Existing installs may lack unique_id (single-device path was broken before).
+    if entry.unique_id is None and coordinator.data is not None:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=coordinator.data.serial_number
+        )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
